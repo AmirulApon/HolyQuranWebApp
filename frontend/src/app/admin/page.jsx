@@ -164,10 +164,8 @@ export default function AdminDashboard() {
     const navigation = [
         { name: 'Dashboard', id: 'dashboard', icon: ChartBarIcon },
         { name: 'Donations', id: 'donations', icon: CurrencyDollarIcon },
-        { name: 'Leaders', id: 'leaders', icon: UserGroupIcon },
         { name: 'Subscriptions', id: 'subscriptions', icon: CreditCardIcon },
         { name: 'Messages', id: 'messages', icon: EnvelopeIcon },
-        { name: 'Matrimony', id: 'marriage', icon: HeartIcon },
     ];
 
     const renderContent = () => {

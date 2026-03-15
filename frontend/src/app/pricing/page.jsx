@@ -11,13 +11,13 @@ export default function PricingPage() {
     const { user } = useAuth();
     const router = useRouter();
     const [processing, setProcessing] = useState(null);
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState('sslcommerz');
+    const [transactionId, setTransactionId] = useState('');
 
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                // Ensure auth before fetching if plans are protected, though usually public.
-                // Our API route for plans is protected by auth:api in routes/api.php
-                // ideally plans should be public, but let's stick to current backend logic
                 const response = await api.get('/plans');
                 setPlans(response.data);
             } catch (error) {
@@ -27,55 +27,49 @@ export default function PricingPage() {
             }
         };
 
-        if (user) {
-            fetchPlans();
-        } else {
-             // If not logged in, we might want to show plans anyway?
-             // But backend requires auth. For now, let's redirect or show login prompt.
-             // Better user experience: Show static plans if not logged in, but let's fetch for accuracy.
-        }
-    }, [user]);
+        fetchPlans();
+    }, []);
 
-    const handleSubscribe = async (planId) => {
+    const handleSubscribe = (planId) => {
         if (!user) {
             router.push('/login');
             return;
         }
+        setSelectedPlan(planId);
+    };
 
-        setProcessing(planId);
+    const confirmSubscription = async () => {
+        setProcessing(selectedPlan);
         try {
-            await api.post('/subscribe', {
-                plan_id: planId,
-                payment_method: 'mock_card'
+            const res = await api.post('/subscribe', {
+                plan_id: selectedPlan,
+                payment_method: paymentMethod,
+                transaction_id: transactionId
             });
+            
+            if (res.data.url) {
+                window.location.href = res.data.url;
+                return;
+            }
+
             alert('Subscription successful! You now have full access.');
+            setSelectedPlan(null);
             router.push('/dashboard');
         } catch (error) {
             console.error("Subscription failed", error);
-            alert('Subscription failed. Please try again.');
+            if (error.response?.status !== 401) {
+                alert('Subscription failed. Please try again.');
+            }
         } finally {
             setProcessing(null);
         }
     };
 
-    if (loading && user) {
+    if (loading) {
         return <div className="min-h-screen flex items-center justify-center">Loading plans...</div>;
     }
 
-    if (!user) {
-        return (
-             <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-900">
-                <h1 className="text-3xl font-bold mb-4">Pricing Plans</h1>
-                <p className="mb-6 text-gray-600">Please log in to view and subscribe to plans.</p>
-                <button 
-                    onClick={() => router.push('/login')}
-                    className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-                >
-                    Log In
-                </button>
-             </div>
-        );
-    }
+
 
     return (
         <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -95,7 +89,7 @@ export default function PricingPage() {
                             )}
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
                             <div className="flex items-baseline mb-6">
-                                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">${plan.price}</span>
+                                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">৳{plan.price}</span>
                                 <span className="text-base font-medium text-gray-500 ml-2">/{plan.period}</span>
                             </div>
                             
@@ -125,6 +119,69 @@ export default function PricingPage() {
                     ))}
                 </div>
             </div>
+
+            {/* Payment Modal */}
+            {selectedPlan && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Complete Subscription</h2>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Payment Method
+                            </label>
+                            <select 
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            >
+                                <option value="sslcommerz">SSLCommerz (Mobile Banking/Cards)</option>
+                                <option value="bkash">bKash</option>
+                                <option value="nagad">Nagad</option>
+                                <option value="rocket">Rocket</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+
+                        {['bkash', 'nagad', 'rocket'].includes(paymentMethod) && (
+                            <div className="bg-emerald-50 dark:bg-emerald-800/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-700 mb-4">
+                                <p className="text-sm text-gray-800 dark:text-gray-200 mb-3">
+                                    <strong>Instruction:</strong> Please send Taka to this {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} number: <strong>01670655682</strong>. Taka received by this number.
+                                </p>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Transaction ID
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        value={transactionId}
+                                        onChange={(e) => setTransactionId(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        placeholder="Enter Transaction ID"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex gap-4 mt-6">
+                            <button 
+                                onClick={() => setSelectedPlan(null)}
+                                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmSubscription}
+                                disabled={!!processing || (['bkash', 'nagad', 'rocket'].includes(paymentMethod) && !transactionId)}
+                                className="flex-1 py-2 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-70"
+                            >
+                                {processing ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

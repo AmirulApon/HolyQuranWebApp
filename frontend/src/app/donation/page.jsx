@@ -6,10 +6,12 @@ import api from '@/lib/axios';
 
 export default function DonationPage() {
     const [amount, setAmount] = useState('');
+    const [currency, setCurrency] = useState('BDT');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('credit_card');
+    const [transactionId, setTransactionId] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
@@ -21,18 +23,25 @@ export default function DonationPage() {
         setSuccess(false);
 
         try {
-            await api.post('/donate', {
+            const res = await api.post('/donate', {
                 amount,
+                currency,
                 donor_name: name,
                 donor_email: email,
                 message,
                 payment_method: paymentMethod,
+                transaction_id: transactionId,
             });
+            if (res.data.url) {
+                window.location.href = res.data.url;
+                return;
+            }
             setSuccess(true);
             setAmount('');
             setName('');
             setEmail('');
             setMessage('');
+            setTransactionId('');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to process donation');
         } finally {
@@ -73,21 +82,39 @@ export default function DonationPage() {
                         )}
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Donation Amount (USD)
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                                    <input 
-                                        type="number" 
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                        placeholder="10.00"
-                                        min="1"
-                                        required
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Currency
+                                    </label>
+                                    <select 
+                                        value={currency}
+                                        onChange={(e) => setCurrency(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    >
+                                        <option value="BDT">BDT (Taka)</option>
+                                        <option value="USD">USD (Dollar)</option>
+                                        <option value="EUR">EUR (Euro)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Donation Amount
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                            {currency === 'BDT' ? '৳' : currency === 'EUR' ? '€' : '$'}
+                                        </span>
+                                        <input 
+                                            type="number" 
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                            placeholder="10.00"
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -127,11 +154,36 @@ export default function DonationPage() {
                                     onChange={(e) => setPaymentMethod(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 >
+                                    <option value="sslcommerz">SSLCommerz (Mobile Banking/Cards)</option>
+                                    <option value="bkash">bKash</option>
+                                    <option value="nagad">Nagad</option>
+                                    <option value="rocket">Rocket</option>
                                     <option value="credit_card">Credit Card</option>
                                     <option value="paypal">PayPal</option>
                                     <option value="bank_transfer">Bank Transfer</option>
                                 </select>
                             </div>
+
+                            {['bkash', 'nagad', 'rocket'].includes(paymentMethod) && (
+                                <div className="bg-emerald-50 dark:bg-emerald-800/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-700">
+                                    <p className="text-sm text-gray-800 dark:text-gray-200 mb-3">
+                                        <strong>Instruction:</strong> Please send Taka to this {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'nagad' ? 'Nagad' : 'Rocket'} number: <strong>01670655682</strong>. Taka received by this number.
+                                    </p>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Transaction ID
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            value={transactionId}
+                                            onChange={(e) => setTransactionId(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                            placeholder="Enter Transaction ID"
+                                            required={['bkash', 'nagad', 'rocket'].includes(paymentMethod)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

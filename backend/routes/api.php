@@ -29,7 +29,6 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/admin/marriage-profiles/{id}', [App\Http\Controllers\AdminController::class, 'destroyMarriageProfile']);
     
     // Subscription Routes
-    Route::get('/plans', [App\Http\Controllers\SubscriptionController::class, 'plans']);
     Route::post('/subscribe', [App\Http\Controllers\SubscriptionController::class, 'subscribe']);
     Route::get('/subscription/status', [App\Http\Controllers\SubscriptionController::class, 'status']);
 
@@ -58,9 +57,16 @@ Route::post('/contact', [App\Http\Controllers\ContactController::class, 'store']
 Route::get('/advertisements', [App\Http\Controllers\AdvertisementController::class, 'index']);
 
 Route::post('/donate', [App\Http\Controllers\DonationController::class, 'store']); // Public route for now
+Route::post('/sslcommerz/success', [App\Http\Controllers\DonationController::class, 'success']);
+Route::post('/sslcommerz/fail', [App\Http\Controllers\DonationController::class, 'fail']);
+Route::post('/sslcommerz/cancel', [App\Http\Controllers\DonationController::class, 'cancel']);
+
+// Public Pricing Plans
+Route::get('/plans', [App\Http\Controllers\SubscriptionController::class, 'plans']);
+Route::post('/sslcommerz/subscription/success', [App\Http\Controllers\SubscriptionController::class, 'success']);
+Route::post('/sslcommerz/subscription/fail', [App\Http\Controllers\SubscriptionController::class, 'fail']);
+Route::post('/sslcommerz/subscription/cancel', [App\Http\Controllers\SubscriptionController::class, 'cancel']);
 
 Route::get('/surahs', [SurahController::class, 'index']);
 
-Route::middleware(['subscribed'])->group(function () {
-    Route::get('/surahs/{surah}', [SurahController::class, 'show']);
-});
+Route::get('/surahs/{surah}', [SurahController::class, 'show']);

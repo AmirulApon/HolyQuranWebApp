@@ -184,11 +184,25 @@ export default function AudioPlayer({ surah, currentAyah, onAyahChange }) {
                     </button>
                     
                     <div className="flex flex-col flex-1 sm:w-64">
-                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                         <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-1">
                             {audioLanguage === 'bn' ? (
                                 <span>Full Surah</span>
                             ) : (
-                                <span>Ayah {currentAyah} / {surah.ayah_count}</span>
+                                <div className="flex items-center gap-1">
+                                    <span>Ayah</span>
+                                    <select 
+                                        value={currentAyah} 
+                                        onChange={(e) => onAyahChange(parseInt(e.target.value))}
+                                        className="bg-transparent text-gray-700 dark:text-gray-300 font-medium focus:outline-none cursor-pointer border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 pb-0.5"
+                                    >
+                                        {Array.from({ length: surah.ayah_count }, (_, i) => i + 1).map(num => (
+                                            <option key={num} value={num} className="bg-white dark:bg-gray-800">
+                                                {num}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span>/ {surah.ayah_count}</span>
+                                </div>
                             )}
                             <span>{formatTime(audioRef.current?.currentTime)} / {formatTime(duration)}</span>
                         </div>

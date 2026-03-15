@@ -13,27 +13,23 @@ export default function SurahViewer({ surah, surahId }) {
   const [lastReadAyah, setLastReadAyah] = useState(null);
   const { user } = useAuth();
   const [loading, setLoading] = useState(!surah);
-  const [restricted, setRestricted] = useState(false);
   const [currentAudioAyah, setCurrentAudioAyah] = useState(1);
 
-  useEffect(() => {
-    if (!surah) {
-        setLoading(true);
-        api.get(`/surahs/${surahId}`)
-            .then(res => {
-                setCurrentSurah(res.data);
-                setRestricted(false);
-            })
-            .catch(err => {
-                if (err.response?.status === 403) {
-                    setRestricted(true);
-                }
-            })
-            .finally(() => setLoading(false));
-    } else {
-        setCurrentSurah(surah);
-    }
-  }, [surah, surahId]);
+    useEffect(() => {
+        if (!surah) {
+            setLoading(true);
+            api.get(`/surahs/${surahId}`)
+                .then(res => {
+                    setCurrentSurah(res.data);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch surah", err);
+                })
+                .finally(() => setLoading(false));
+        } else {
+            setCurrentSurah(surah);
+        }
+    }, [surah, surahId]);
 
   useEffect(() => {
     if (currentSurah) {
@@ -57,7 +53,9 @@ export default function SurahViewer({ surah, surahId }) {
                 ayah_number: ayahNumber
             });
         } catch (error) {
-            console.error("Failed to save progress", error);
+            if (error.response?.status !== 401) {
+                console.error("Failed to save progress", error);
+            }
         }
     }
   };
@@ -71,28 +69,7 @@ export default function SurahViewer({ surah, surahId }) {
       return <div className="min-h-screen flex items-center justify-center">Loading Surah...</div>;
   }
 
-    if (restricted) {
-        return (
-            <div className="max-w-4xl mx-auto p-6 text-center">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-red-100 dark:border-red-900">
-                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    </div>
-                    <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Subscription Required</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Access to Surah {surahId} and beyond requires a premium subscription.
-                        Support our mission and unlock full access to the Holy Quran.
-                    </p>
-                    <Link href="/pricing" className="inline-block px-6 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors">
-                        View Plans & Subscribe
-                    </Link>
-                </div>
-                <div className="mt-8">
-                     <AdBanner position="surah_restricted" />
-                </div>
-            </div>
-        );
-    }
+
 
     if (!currentSurah) return <div className="text-center py-10">Surah not found.</div>;
 
@@ -206,6 +183,29 @@ export default function SurahViewer({ surah, surahId }) {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Next/Previous Surah Navigation */}
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
+            {currentSurah.number > 1 ? (
+                <Link 
+                    href={`/surah/${currentSurah.number - 1}`}
+                    className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg shadow-sm hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500 border border-gray-200 dark:border-gray-700 transition-all"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Previous Surah
+                </Link>
+            ) : <div></div>}
+
+            {currentSurah.number < 114 ? (
+                <Link 
+                    href={`/surah/${currentSurah.number + 1}`}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg shadow-sm hover:bg-emerald-700 transition-all"
+                >
+                    Next Surah
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </Link>
+            ) : <div></div>}
         </div>
       </div>
       <AudioPlayer surah={currentSurah} currentAyah={currentAudioAyah} onAyahChange={setCurrentAudioAyah} />

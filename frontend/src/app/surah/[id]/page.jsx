@@ -18,6 +18,12 @@ async function getSurah(id) {
   return res.json();
 }
 
+export async function generateStaticParams() {
+  return Array.from({ length: 114 }, (_, i) => ({
+    id: (i + 1).toString(),
+  }));
+}
+
 export default async function SurahPage({ params }) {
   const { id } = await params;
   const surah = await getSurah(id);

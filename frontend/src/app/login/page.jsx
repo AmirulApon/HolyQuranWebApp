@@ -24,7 +24,7 @@ export default function LoginPage() {
              if (err.response && err.response.data && err.response.data.message) {
                 setError(err.response.data.message);
             } else {
-                setError('Login failed. Please check your credentials.');
+                setError(err.message || 'Login failed. Please check your credentials.');
             }
         } finally {
             setLoading(false);

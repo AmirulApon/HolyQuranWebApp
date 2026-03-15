@@ -17,7 +17,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@quranapp.com'],
             [
                 'name' => 'Admin User',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => 'admin',
             ]
         );

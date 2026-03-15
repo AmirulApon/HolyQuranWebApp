@@ -22,17 +22,9 @@ export default function Navbar() {
                         <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium">
                             Home
                         </Link>
-                        <Link href="/pricing" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
-                            Pricing
-                        </Link>
+
                         <Link href="/donation" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
                             Donate
-                        </Link>
-                        <Link href="/marriage" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
-                            Marriage
-                        </Link>
-                        <Link href="/leaders" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
-                            Leaders
                         </Link>
                         <Link href="/contact" className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
                             Contact

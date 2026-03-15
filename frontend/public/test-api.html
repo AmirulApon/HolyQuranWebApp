@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connectivity Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .status { padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>API Connectivity Test</h1>
+    <p>Click the button below to test connection to the backend API.</p>
+    
+    <label>Backend URL: <input type="text" id="apiUrl" value="http://127.0.0.1:8000/api/login" style="width: 300px;"></label>
+    <br><br>
+    <button onclick="testConnection()">Test Login API</button>
+
+    <div id="results" style="margin-top: 20px;"></div>
+
+    <script>
+        async function testConnection() {
+            const url = document.getElementById('apiUrl').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing...';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@quranapp.com',
+                        password: 'password'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `<div class="status success">
+                        <strong>Success!</strong><br>
+                        Status: ${response.status}<br>
+                        Response: <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                } else {
+                    resultsDiv.innerHTML = `<div class="status error">
+                        <strong>Backend Error (Connection OK)</strong><br>
+                        Status: ${response.status}<br>
+                        Response: <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                resultsDiv.innerHTML = `<div class="status error">
+                    <strong>Network Error (Connection Failed)</strong><br>
+                    Message: ${error.message}<br>
+                    <small>Check console for more details.</small>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
